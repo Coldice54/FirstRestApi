@@ -41,12 +41,16 @@ users = {
 def hello_world():
     return users
 
-@app.route('/users/<id>')
+@app.route('/users/<id>', methods=['GET', 'DELETE'])
 def get_user(id):
    if id :
       for user in users['users_list']:
         if user['id'] == id:
-           return user
+            if request.method == 'GET':
+                  return user
+            else:
+                  users['users_list'].remove(user)
+                  return ({})
       return ({})
    return users
 @app.route('/users')
