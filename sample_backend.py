@@ -1,9 +1,12 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
+from flask_cors import CORS
+import random
 import json
 
-app = Flask(__name__)
+app = Flask(__name__) 
+CORS(app)
 users = { 
    'users_list' :
    [
@@ -46,7 +49,22 @@ def get_user(id):
            return user
       return ({})
    return users
-
+@app.route('/users')
+def get_users_by_name():
+   search_username = request.args.get('name') #accessing the value of parameter 'name'
+   if search_username :
+      subdict = {'users_list' : []}
+      for user in users['users_list']:
+         if user['name'] == search_username:
+            subdict['users_list'].append(user)
+      return subdict
+   return users
+def gen_id(idlist):
+      r=random.randint(1,999999)
+      while(r in idlist):
+            r=random.randint(1,999999)
+            if r not in idlist: idlist.append(r)
+      return r,idlist
 @app.route('/users', methods=['GET', 'POST', 'DELETE'])
 def get_users():
    if request.method == 'GET':
@@ -69,16 +87,22 @@ def get_users():
       return users
    elif request.method == 'POST':
       userToAdd = request.get_json()
+      idlist = []
+      id2,idlist=gen_id(idlist)
+      userToAdd["id"] = str(id2)
       users['users_list'].append(userToAdd)
       resp = jsonify(success=True)
-      #resp.status_code = 200 #optionally, you can always set a response code. 
-      # 200 is the default code for a normal response
-      return resp
+      resp.status_code = 201
+      return userToAdd
    elif request.method == 'DELETE':
-      # need to send whole user to the request
       userToDelete = request.get_json()
       users['users_list'].remove(userToDelete)
       resp = jsonify(success=True)
-      #resp.status_code = 200 #optionally, you can always set a response code. 
-      # 200 is the default code for a normal response
-      return resp
+      resp.status_code = 204
+      return userToDelete
+def find_users_by_name(name):
+   subdict = {'users_list' : []}
+   for user in users['users_list']:
+      if user['name'] == name:
+         subdict['users_list'].append(user)
+   return subdict  
